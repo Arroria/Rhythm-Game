@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="SoundDevice.cpp">
+      <Filter>__sound_device</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="__sound_device">
+      <UniqueIdentifier>{04c6872f-5045-4927-a305-4787966863b3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="SoundDevice.h">
+      <Filter>__sound_device</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
