@@ -6,7 +6,7 @@
       <Filter>__sound_device</Filter>
     </ClCompile>
     <ClCompile Include="Lane.cpp" />
-    <ClCompile Include="LaneVisualizer.cpp" />
+    <ClCompile Include="GameVisualizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="__sound_device">
@@ -21,6 +21,9 @@
       <Filter>__sound_device</Filter>
     </ClInclude>
     <ClInclude Include="Lane.h" />
-    <ClInclude Include="LaneVisualizer.h" />
+    <ClInclude Include="GameVisualizer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="temp pattern.inl" />
   </ItemGroup>
 </Project>
