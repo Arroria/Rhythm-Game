@@ -5,15 +5,22 @@
     <ClCompile Include="SoundDevice.cpp">
       <Filter>__sound_device</Filter>
     </ClCompile>
+    <ClCompile Include="Lane.cpp" />
+    <ClCompile Include="LaneVisualizer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="__sound_device">
       <UniqueIdentifier>{04c6872f-5045-4927-a305-4787966863b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="__inputManager">
+      <UniqueIdentifier>{61b8ce3b-ebd5-4054-83b6-2d1d7c982343}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SoundDevice.h">
       <Filter>__sound_device</Filter>
     </ClInclude>
+    <ClInclude Include="Lane.h" />
+    <ClInclude Include="LaneVisualizer.h" />
   </ItemGroup>
 </Project>

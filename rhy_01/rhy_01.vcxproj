@@ -143,10 +143,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Lane.cpp" />
+    <ClCompile Include="LaneVisualizer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="SoundDevice.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Lane.h" />
+    <ClInclude Include="LaneVisualizer.h" />
     <ClInclude Include="SoundDevice.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
