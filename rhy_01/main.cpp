@@ -5,7 +5,11 @@
 SoundDevice soundDevice;
 
 #include "InputDevice/InputDevice.h"
+#if _DEBUG
 #pragma comment (lib, "InputDevice/Debug/x64/InputDevice.lib")
+#else
+#pragma comment (lib, "InputDevice/Release/x64/InputDevice.lib")
+#endif
 InputDevice g_inputDevice;
 
 
@@ -19,6 +23,13 @@ constexpr std::string_view _path_song = "697873717765.mp3";
 void main2();
 int main()
 {
+	CONSOLE_CURSOR_INFO ConsoleCursor;
+	ConsoleCursor.bVisible = false;
+	ConsoleCursor.dwSize = 1;
+	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &ConsoleCursor);
+
+	std::cout << "창\n을\n세\n로\n로\n길\n게\n해\n주\n세\n요";
+
 	soundDevice.Initialize();
 	while (!GetAsyncKeyState(VK_ESCAPE))
 	{
@@ -63,6 +74,21 @@ void main2()
 		else if (type == "em")	{ ++score[3]; gotoxy(20, 10 + 3); std::cout << "Early Miss : " << score[3] << "     "; _combo_end(); }
 		else if (type == "lm")	{ ++score[4]; gotoxy(20, 10 + 4); std::cout << "Late Miss  : " << score[4] << "     "; _combo_end(); }
 		else if (type == "m")	{ ++score[5]; gotoxy(20, 10 + 5); std::cout << "Miss       : " << score[5] << "     "; _combo_end(); }
+
+
+		constexpr size_t _max_note = 1100;
+		constexpr size_t _max_score = 1000000;
+
+		size_t myScore = 0;
+		myScore += (_max_score * score[0] / _max_note * 1);
+		myScore += (_max_score * score[1] / _max_note * 0.5);
+		myScore += (_max_score * score[2] / _max_note * 0.5);
+		myScore += (_max_score * score[3] / _max_note * 0.1);
+		myScore += (_max_score * score[4] / _max_note * 0.1);
+		myScore += (_max_score * score[5] / _max_note * 0);
+
+		gotoxy(20, 19);
+		std::cout << "Score      : " << myScore;
 	};
 
 	

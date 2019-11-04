@@ -16,7 +16,8 @@ Lane::~Lane()
 
 
 
-void _draw_result(std::string_view type, std::chrono::milliseconds relativeTime, std::chrono::milliseconds absoluteTime) { std::cout << type << " : " << (relativeTime.count() > 0 ? "" : "+") << -(relativeTime.count()) << '(' << absoluteTime.count() << ')' << "                    " << std::endl; }
+//void _draw_result(std::string_view type, std::chrono::milliseconds relativeTime, std::chrono::milliseconds absoluteTime) { std::cout << type << " : " << (relativeTime.count() > 0 ? "" : "+") << -(relativeTime.count()) << '(' << absoluteTime.count() << ')' << "                    " << std::endl; }
+void _draw_result(std::string_view type, std::chrono::milliseconds relativeTime, std::chrono::milliseconds absoluteTime) { std::cout << type << " : " << (relativeTime.count() > 0 ? "" : "+") << -(relativeTime.count()) << "ms                    " << std::endl; }
 void _draw_result(std::string_view type, Time_t relativeTime, Time_t absoluteTime) { _draw_result(type, std::chrono::duration_cast<std::chrono::milliseconds>(relativeTime), std::chrono::duration_cast<std::chrono::milliseconds>(absoluteTime)); }
 
 void Lane::update(time_t timing)
