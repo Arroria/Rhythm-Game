@@ -8,19 +8,28 @@
     <ClCompile Include="SoundDevice.cpp">
       <Filter>__sound_device</Filter>
     </ClCompile>
-    <ClCompile Include="RhytheGame.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="RhythmGame.cpp" />
+    <ClCompile Include="ConsoleDoubleBuffer.cpp">
+      <Filter>__console_double_buffering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="__sound_device">
       <UniqueIdentifier>{ebadb0dc-6e15-44c2-a8e1-072b60d81a13}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="__console_double_buffering">
+      <UniqueIdentifier>{39c74bdd-2cc6-4db1-9adb-b49a0c5b4586}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SoundDevice.h">
       <Filter>__sound_device</Filter>
     </ClInclude>
-    <ClInclude Include="RhytheGame.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="RhythmGame.h" />
+    <ClInclude Include="ConsoleDoubleBuffer.h">
+      <Filter>__console_double_buffering</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

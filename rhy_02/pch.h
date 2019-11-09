@@ -15,7 +15,13 @@ inline SoundDevice g_soundDevice;
 inline InputDevice g_inputDevice;
 
 
+#include "ConsoleDoubleBuffer.h"
+inline ConsoleDoubleBuffer* g_cdb = nullptr;
+
+
+
 #include <chrono>
+using namespace std::chrono_literals;
 using Clock_t = std::chrono::steady_clock;
 using ClockTime_t = Clock_t::duration;
 using Time_t = std::chrono::nanoseconds;

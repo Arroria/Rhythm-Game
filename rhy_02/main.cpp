@@ -1,22 +1,34 @@
 #include "pch.h"
-#include "RhytheGame.h"
-
-#include <iostream>
-#include <chrono>
 
 
-inline TimePoint_t g_lastKeyUpdateTime;
+
+constexpr size_t _console_window_size_x = 400;
+constexpr size_t _console_window_size_y = 800;
+constexpr size_t _console_buffer_size_x = 40;
+constexpr size_t _program_rendering_fps = 0;
+
+constexpr std::string_view _path_test = "../../../../FMOD Studio API Windows/api/core/examples/media/standrews.wav";
+constexpr std::string_view _path_song = "697873717765.mp3";
+
+
+
+
 
 void Initialize();
 void Update();
 void Render();
+void SetConsoleState(size_t x, size_t y, LONG_PTR new_style);
+
+TimePoint_t g_lastKeyUpdateTime;
+
 int main()
 {
+	SetConsoleState(_console_window_size_x, _console_window_size_y, WS_BORDER | WS_DLGFRAME | WS_MINIMIZEBOX | WS_SYSMENU);
+	g_cdb = new ConsoleDoubleBuffer(_console_buffer_size_x);
 	g_soundDevice.Initialize();
 	Initialize();
 
-	constexpr size_t _FPS = 60;
-	constexpr Time_t _TimePerFPS = Time_t(std::chrono::seconds(1)) / _FPS;
+	constexpr Time_t _TimePerFPS = _program_rendering_fps ? Time_t(Time_t(std::chrono::seconds(1)) / _program_rendering_fps) : Time_t(0);
 	TimePoint_t lastRenderTime(Time_t(0));
 	while (!GetAsyncKeyState(VK_ESCAPE) || !GetAsyncKeyState(VK_BACK))
 	{
@@ -36,18 +48,17 @@ int main()
 		g_lastKeyUpdateTime = Clock_t::now();
 	}
 	g_soundDevice.Release();
+
+	delete g_cdb;
 	return 0;
 }
 
 
-constexpr std::string_view _path_test = "../../../../FMOD Studio API Windows/api/core/examples/media/standrews.wav";
-constexpr std::string_view _path_song = "697873717765.mp3";
 
-#include "RhytheGame.h"
-inline RhytheGame* g_rhy;
+#include "RhythmGame.h"
+inline RhythmGame* g_rhy;
 void Initialize()
 {
-	using namespace std::chrono_literals;
 	constexpr size_t readybpm = 198;
 	constexpr size_t bpm = 198;
 	constexpr Time_t readyunit = std::chrono::duration_cast<Time_t>(1s * (60.0 / readybpm));
@@ -60,9 +71,10 @@ void Initialize()
 		note[lane].push_back(std::chrono::duration_cast<Time_t>(unit * _1 + 700ms));
 	};
 	#include "../rhy_01/temp pattern.inl"
+	
 
-	g_rhy = new RhytheGame;
-	g_rhy->Initialize(SoundSample(g_soundDevice, _path_song), std::move(note[0]), std::move(note[1]), std::move(note[2]), std::move(note[3]));
+	g_rhy = new RhythmGame;
+	g_rhy->Initialize(SoundSample(g_soundDevice, _path_song), 198, std::move(note[0]), std::move(note[1]), std::move(note[2]), std::move(note[3]));
 }
 
 void Update()
@@ -72,5 +84,23 @@ void Update()
 
 void Render()
 {
+	g_cdb->Clear();
+	g_cdb->Begin();
 	g_rhy->Render();
+	g_cdb->End();
+	g_cdb->Flipping();
+}
+
+
+
+void SetConsoleState(size_t x, size_t y, LONG_PTR new_style)
+{
+	SetLastError(NO_ERROR);
+	HWND hwnd_console = GetConsoleWindow();
+	SetWindowLongPtr(hwnd_console, GWL_STYLE, new_style);
+	SetWindowPos(hwnd_console, 0, 0, 0, x, y, SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE | SWP_DRAWFRAME);
+	ShowWindow(hwnd_console, SW_SHOW);
+
+	_CONSOLE_CURSOR_INFO cursorInfo{ 1, false };
+	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &cursorInfo);
 }
