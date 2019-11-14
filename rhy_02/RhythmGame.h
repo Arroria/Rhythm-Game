@@ -14,12 +14,10 @@ enum JudgementScore_t
 	Late,
 	Miss,
 	Lost,
+	__MAX
 };
 
 class Lane;
-
-
-
 class RhythmGame
 {
 public:
@@ -35,6 +33,17 @@ public:
 	static constexpr Time_t _offset_unity		= 1ms;
 
 
+	struct KeySetting
+	{
+		std::array<input_key_code_t, 4> lane;
+		input_key_code_t offsetL;
+		input_key_code_t offsetR;
+		input_key_code_t speedL;
+		input_key_code_t speedR;
+	};
+
+
+
 	RhythmGame();
 	~RhythmGame();
 
@@ -43,12 +52,12 @@ public:
 	void Update(TimePoint_t inputTime);
 	void Render();
 
-	void SetKey(input_key_code_t lane1, input_key_code_t lane2, input_key_code_t lane3, input_key_code_t lane4, input_key_code_t offsetL, input_key_code_t offsetR, input_key_code_t speedL, input_key_code_t speedR);
+	void SetKeySetting(KeySetting keySetting);
 
 
 private:
 	// For game
-	std::array<std::pair<std::unique_ptr<Lane>, input_key_code_t>, _lane_count> m_lane;
+	std::array<std::unique_ptr<Lane>, _lane_count> m_lane;
 	
 	bool m_isRunning;
 	TimePoint_t m_soundBeginTime;
@@ -58,17 +67,19 @@ private:
 	size_t m_musicBpm;
 
 	// For user	
+	KeySetting m_keySetting;
+	std::array<size_t, JudgementScore_t::__MAX> m_scoreData;
+	size_t m_combo;
+	size_t m_comboMax;
 	size_t m_noteSpeed;
 	Time_t m_offset;
 
-	input_key_code_t m_offsetL;
-	input_key_code_t m_offsetR;
-	input_key_code_t m_speedL;
-	input_key_code_t m_speedR;
 
 
 	void WaitUpate();
 	void RunningUpdate(TimePoint_t inputTime);
+
+	void ScoreUpdate(JudgementScore_t score);
 };
 
 class Lane
@@ -78,7 +89,11 @@ public:
 	using list_t = std::list<time_t>;
 	using event_t = RhythmGame::event_t;
 
-	Lane(list_t noteList, time_t perfect_time, time_t near_time, time_t miss_time, event_t event_);
+	static constexpr Time_t _perfect_time	= RhythmGame::_perfect_time;
+	static constexpr Time_t _near_time		= RhythmGame::_near_time;
+	static constexpr Time_t _miss_time		= RhythmGame::_miss_time;
+
+	Lane(list_t noteList, event_t event_);
 	~Lane();
 
 
@@ -90,10 +105,6 @@ public:
 
 private:
 	list_t m_noteList;
-	time_t m_perfect_time;
-	time_t m_near_time;
-	time_t m_miss_time;
-
 	event_t m_event;
 };
 

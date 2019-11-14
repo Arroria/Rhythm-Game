@@ -1,10 +1,8 @@
 #include "pch.h"
 #include "RhythmGame.h"
 
-Lane::Lane(list_t noteList, time_t perfect_time, time_t near_time, time_t miss_time, event_t event_)
+Lane::Lane(list_t noteList, event_t event_)
 	: m_noteList(std::move(noteList))
-	, m_perfect_time(perfect_time), m_near_time(near_time), m_miss_time(miss_time)
-
 	, m_event(event_)
 {
 }
@@ -22,7 +20,7 @@ void Lane::miss_check(time_t delta)
 		const auto& note = m_noteList.front();
 		time_t interval = delta - note;
 
-		if (!(interval > m_miss_time))
+		if (!(interval > _miss_time))
 			break;
 		
 		m_noteList.pop_front();
@@ -39,11 +37,11 @@ void Lane::hit(time_t delta)
 	time_t interval = delta - note;
 
 	JudgementScore_t jscore(JudgementScore_t::Lost);
-	if (interval > m_near_time)				jscore = JudgementScore_t::Miss;
-	else if (interval > m_perfect_time)		jscore = JudgementScore_t::Late;
-	else if (interval >= -m_perfect_time)	jscore = JudgementScore_t::Perfect;
-	else if (interval >= -m_near_time)		jscore = JudgementScore_t::Early;
-	else if (interval >= -m_miss_time)		jscore = JudgementScore_t::Miss;
+		 if (interval > _near_time)			jscore = JudgementScore_t::Miss;
+	else if (interval > _perfect_time)		jscore = JudgementScore_t::Late;
+	else if (interval >= -_perfect_time)	jscore = JudgementScore_t::Perfect;
+	else if (interval >= -_near_time)		jscore = JudgementScore_t::Early;
+	else if (interval >= -_miss_time)		jscore = JudgementScore_t::Miss;
 	else 
 		return;
 
@@ -61,17 +59,25 @@ RhythmGame::RhythmGame()
 
 	, m_music()
 	, m_mChannel()
+	, m_musicBpm(NULL)
 
-	, m_noteSpeed(_default_note_speed), m_offset(0)
-	
-	, m_offsetL(VK_NEXT), m_offsetR(VK_PRIOR)
-	, m_speedL(VK_OEM_COMMA), m_speedR(VK_OEM_PERIOD)
-
+	, m_keySetting{}
+	, m_scoreData()
+	, m_combo(0)
+	, m_comboMax(0)
+	, m_noteSpeed(_default_note_speed)
+	, m_offset(0)
 {
-	m_lane[0].second = '7';
-	m_lane[1].second = '8';
-	m_lane[2].second = '9';
-	m_lane[3].second = '0';
+	m_keySetting.lane[0] = '7';
+	m_keySetting.lane[1] = '8';
+	m_keySetting.lane[2] = '9';
+	m_keySetting.lane[3] = '0';
+	m_keySetting.offsetL = VK_NEXT;
+	m_keySetting.offsetR = VK_PRIOR;
+	m_keySetting.speedL = VK_OEM_COMMA;
+	m_keySetting.speedR = VK_OEM_PERIOD;
+
+	m_scoreData.fill(0);
 }
 
 RhythmGame::~RhythmGame()
@@ -79,36 +85,25 @@ RhythmGame::~RhythmGame()
 }
 
 
-void temp(JudgementScore_t s)
-{
-	//g_cdb->CursorTo(0, 34);
-	//switch (s)
-	//{
-	//case Perfect:	std::cout << "Perfect" << std::endl;break;
-	//case Early:		std::cout << "Early  " << std::endl;break;
-	//case Late:		std::cout << "Late   " << std::endl;break;
-	//case Miss:		std::cout << "Miss   " << std::endl;break;
-	//case Lost:		std::cout << "Lost   " << std::endl;break;
-	//}
-}
+
 
 void RhythmGame::Initialize(SoundSample&& music, size_t musicBpm, Lane::list_t _1, Lane::list_t _2, Lane::list_t _3, Lane::list_t _4)
 {
 	m_music = std::move(music);
 	m_musicBpm = musicBpm;
 
-	m_lane[0].first = std::move(std::make_unique<Lane>(std::move(_1), _perfect_time, _near_time, _miss_time, temp));
-	m_lane[1].first = std::move(std::make_unique<Lane>(std::move(_2), _perfect_time, _near_time, _miss_time, temp));
-	m_lane[2].first = std::move(std::make_unique<Lane>(std::move(_3), _perfect_time, _near_time, _miss_time, temp));
-	m_lane[3].first = std::move(std::make_unique<Lane>(std::move(_4), _perfect_time, _near_time, _miss_time, temp));
+	m_lane[0] = std::move(std::make_unique<Lane>(std::move(_1), [this](JudgementScore_t _0){ ScoreUpdate(_0); }));
+	m_lane[1] = std::move(std::make_unique<Lane>(std::move(_2), [this](JudgementScore_t _0){ ScoreUpdate(_0); }));
+	m_lane[2] = std::move(std::make_unique<Lane>(std::move(_3), [this](JudgementScore_t _0){ ScoreUpdate(_0); }));
+	m_lane[3] = std::move(std::make_unique<Lane>(std::move(_4), [this](JudgementScore_t _0){ ScoreUpdate(_0); }));
 }
 
 void RhythmGame::Update(TimePoint_t inputTime)
 {
-	if (g_inputDevice.IsKeyDown(m_offsetL))	m_offset = std::max(Time_t(-16ms), m_offset - _offset_unity);
-	if (g_inputDevice.IsKeyDown(m_offsetR))	m_offset = std::min(Time_t(+16ms), m_offset + _offset_unity);
-	if (g_inputDevice.IsKeyDown(m_speedL))	m_noteSpeed = std::max(size_t(05), m_noteSpeed - (!g_inputDevice.IsKeyPressed(VK_LSHIFT) ? 5 : 1));
-	if (g_inputDevice.IsKeyDown(m_speedR))	m_noteSpeed = std::min(size_t(80), m_noteSpeed + (!g_inputDevice.IsKeyPressed(VK_LSHIFT) ? 5 : 1));
+	if (g_inputDevice.IsKeyDown(m_keySetting.offsetL))	m_offset = std::max(Time_t(-16ms), m_offset - _offset_unity);
+	if (g_inputDevice.IsKeyDown(m_keySetting.offsetR))	m_offset = std::min(Time_t(+16ms), m_offset + _offset_unity);
+	if (g_inputDevice.IsKeyDown(m_keySetting.speedL))	m_noteSpeed = std::max(size_t(05), m_noteSpeed - (!g_inputDevice.IsKeyPressed(VK_LSHIFT) ? 5 : 1));
+	if (g_inputDevice.IsKeyDown(m_keySetting.speedR))	m_noteSpeed = std::min(size_t(80), m_noteSpeed + (!g_inputDevice.IsKeyPressed(VK_LSHIFT) ? 5 : 1));
 
 	m_isRunning ?
 		RunningUpdate(inputTime) :
@@ -138,8 +133,8 @@ void RhythmGame::RunningUpdate(TimePoint_t inputTime)
 	time_t delta = inputTime - m_soundBeginTime;
 	for (size_t index = 0; index < _lane_count; ++index)
 	{
-		Lane& lane = *m_lane[index].first;
-		input_key_code_t keyCode = m_lane[index].second;
+		Lane& lane = *m_lane[index];
+		input_key_code_t keyCode = m_keySetting.lane[index];
 
 		lane.miss_check(delta);
 		if (g_inputDevice.IsKeyDown(keyCode))
@@ -160,11 +155,11 @@ void RhythmGame::Render()
 		return;
 
 
-
+	// Note
 	time_t current = Clock_t::now() - m_soundBeginTime;
 	for (size_t index = 0; index < _lane_count; ++index)
 	{
-		const Lane::list_t& lane = (*m_lane[index].first).data();
+		const Lane::list_t& lane = (*m_lane[index]).data();
 		for (auto iter = lane.begin(); iter != lane.end(); ++iter)
 		{
 			const Time_t unit = std::chrono::duration_cast<Time_t>(Time_t(60s) / (m_musicBpm * _note_fall_speed_per_hz * m_noteSpeed / 10.0));
@@ -197,20 +192,52 @@ void RhythmGame::Render()
 			std::cout << box;
 		}
 	}
+
+
+
+	// Score
+	g_cdb->CursorTo(20, 10 + 0);	std::cout << "Perfect    : " << m_scoreData[0] << "     ";
+	g_cdb->CursorTo(20, 10 + 1);	std::cout << "Early      : " << m_scoreData[1] << "     ";
+	g_cdb->CursorTo(20, 10 + 2);	std::cout << "Late       : " << m_scoreData[2] << "     ";
+	g_cdb->CursorTo(20, 10 + 3);	std::cout << "Lost       : " << m_scoreData[3] << "     ";
+	g_cdb->CursorTo(20, 10 + 4);	std::cout << "Miss       : " << m_scoreData[4] << "     ";
+
+	g_cdb->CursorTo(20, 16);		std::cout << "Combo      : " << m_combo << "     ";
+	g_cdb->CursorTo(20, 17);		std::cout << "Combo Max  : " << m_comboMax << "     ";
+
+	constexpr size_t _max_note = 1100;
+	constexpr size_t _max_score = 1000000;
+	size_t myScore = 0;
+	myScore += (_max_score * m_scoreData[0] / _max_note * 1);
+	myScore += (_max_score * m_scoreData[1] / _max_note * 0.5);
+	myScore += (_max_score * m_scoreData[2] / _max_note * 0.5);
+	myScore += (_max_score * m_scoreData[3] / _max_note * 0.1);
+	myScore += (_max_score * m_scoreData[4] / _max_note * 0);
+
+	g_cdb->CursorTo(20, 18);
+	std::cout << "Score      : " << myScore;
 }
 
 
-void RhythmGame::SetKey(input_key_code_t lane1, input_key_code_t lane2, input_key_code_t lane3, input_key_code_t lane4, input_key_code_t offsetL, input_key_code_t offsetR, input_key_code_t speedL, input_key_code_t speedR)
+
+
+
+void RhythmGame::SetKeySetting(KeySetting keySetting)
 {
-	if (lane1)		m_lane[0].second = lane1;
-	if (lane2)		m_lane[1].second = lane2;
-	if (lane3)		m_lane[2].second = lane3;
-	if (lane4)		m_lane[3].second = lane4;
-	if (offsetL)	m_offsetL	= offsetL;
-	if (offsetR)	m_offsetR	= offsetR;
-	if (speedL)		m_speedL	= speedL;
-	if (speedR)		m_speedR	= speedR;
+	if (keySetting.lane[0])	m_keySetting.lane[0]	= keySetting.lane[0];
+	if (keySetting.lane[1])	m_keySetting.lane[1]	= keySetting.lane[1];
+	if (keySetting.lane[2])	m_keySetting.lane[2]	= keySetting.lane[2];
+	if (keySetting.lane[3])	m_keySetting.lane[3]	= keySetting.lane[3];
+	if (keySetting.offsetL)	m_keySetting.offsetL	= keySetting.offsetL;
+	if (keySetting.offsetR)	m_keySetting.offsetR	= keySetting.offsetR;
+	if (keySetting.speedL)	m_keySetting.speedL		= keySetting.speedL;
+	if (keySetting.speedR)	m_keySetting.speedR		= keySetting.speedR;
 }
 
-
-
+void RhythmGame::ScoreUpdate(JudgementScore_t score)
+{
+	++m_scoreData[score];
+	score == JudgementScore_t::Lost || score == JudgementScore_t::Miss ?
+		m_combo = 0 :
+		m_comboMax = std::max(m_comboMax, ++m_combo);
+}

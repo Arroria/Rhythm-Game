@@ -4,7 +4,7 @@
 
 constexpr size_t _console_window_size_x = 400;
 constexpr size_t _console_window_size_y = 800;
-constexpr size_t _console_buffer_size_x = 40;
+constexpr size_t _console_buffer_size_x = 60;
 constexpr size_t _program_rendering_fps = 0;
 
 constexpr std::string_view _path_test = "../../../../FMOD Studio API Windows/api/core/examples/media/standrews.wav";
