@@ -81,13 +81,14 @@ void WindowLoopManager::WndResize(const unsigned int & xSize, const unsigned int
 WPARAM WindowLoopManager::Loop()
 {
 	using namespace std::chrono_literals;
-	ClockTimePoint_t prev_update;
-	ClockTimePoint_t prev_render;
 
 
 	//Excution Initialize
 	if (m_initialize)
 		m_initialize();
+
+	ClockTimePoint_t prev_update = Clock_t::now();
+	ClockTimePoint_t prev_render = Clock_t::now();
 
 	MSG msg;
 	PeekMessageW(&msg, NULL, NULL, NULL, PM_NOREMOVE);

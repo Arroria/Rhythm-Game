@@ -8,23 +8,38 @@
     <Filter Include="__sound_device">
       <UniqueIdentifier>{faaed97e-0f9e-4591-a9f0-771c90a33f14}</UniqueIdentifier>
     </Filter>
+    <Filter Include="mywinapi">
+      <UniqueIdentifier>{8c0573b4-4006-4362-8a72-0f07e965420a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
       <Filter>리소스 파일</Filter>
     </ClInclude>
     <ClInclude Include="WindowLoopManager.h" />
-    <ClInclude Include="mywinapi.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="SheetData.h" />
     <ClInclude Include="SoundDevice.h">
       <Filter>__sound_device</Filter>
     </ClInclude>
+    <ClInclude Include="SheetEditor.h" />
+    <ClInclude Include="SheetEditor_IO.h" />
+    <ClInclude Include="MyDC.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="mywinapi.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="mywinapi_default_include.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="MyRenderTarget.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="WindowLoopManager.cpp" />
-    <ClCompile Include="mywinapi.cpp" />
     <ClCompile Include="pch.cpp" />
     <ClCompile Include="SheetData.cpp" />
     <ClCompile Include="SoundChannel.cpp">
@@ -32,6 +47,17 @@
     </ClCompile>
     <ClCompile Include="SoundDevice.cpp">
       <Filter>__sound_device</Filter>
+    </ClCompile>
+    <ClCompile Include="SheetEditor.cpp" />
+    <ClCompile Include="SheetEditor_IO.cpp" />
+    <ClCompile Include="MyDC.cpp">
+      <Filter>mywinapi</Filter>
+    </ClCompile>
+    <ClCompile Include="mywinapi.cpp">
+      <Filter>mywinapi</Filter>
+    </ClCompile>
+    <ClCompile Include="MyRenderTarget.cpp">
+      <Filter>mywinapi</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -46,5 +72,8 @@
     <Image Include="editor.ico">
       <Filter>리소스 파일</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="697873717765.txt" />
   </ItemGroup>
 </Project>

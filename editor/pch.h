@@ -21,4 +21,7 @@ inline SoundDevice g_soundDevice;
 
 
 #include "mywinapi.h"
-
+inline DC_Window g_dc_window;
+inline DC_RenderTarget g_dc_backbuffer;
+inline DC_RenderTarget g_dc_rendertarget1;
+inline DC_RenderTarget g_dc_rendertarget2;
