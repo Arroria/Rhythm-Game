@@ -106,6 +106,15 @@ bool SoundChannel::is_paused() const
 	return _is_paused();
 }
 
+void SoundChannel::set_time(std::chrono::milliseconds millisec)
+{
+	if constexpr (SOUNDDEVICE_SAFETY)
+		if (!is_available() || millisec.count() < 0)
+			return;
+
+	m_channel->setPosition(millisec.count(), FMOD_TIMEUNIT_MS);
+}
+
 unsigned int SoundChannel::get_time() const
 {
 	if constexpr (SOUNDDEVICE_SAFETY)

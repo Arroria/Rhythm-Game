@@ -1,6 +1,7 @@
 #pragma once
 #include "fmod.hpp"
 #include <string_view>
+#include <chrono>
 
 #define SOUNDDEVICE_SAFETY true
 
@@ -27,6 +28,7 @@ public:
 	bool is_playing() const;
 	bool is_paused() const;
 
+	void set_time(std::chrono::milliseconds millisec);
 	unsigned int get_time() const;
 
 
@@ -78,6 +80,7 @@ public:
 	~SoundDevice();
 
 	void Initialize();
+	void Update() { m_system->update(); }
 	void Release();
 
 	SoundSample CreateSoundSample(std::string_view filePath);

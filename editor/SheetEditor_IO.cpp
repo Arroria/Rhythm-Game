@@ -71,8 +71,16 @@ SheetEditor_IO::SheetEditor_IO()
 	, m_edisc_focusBox_laneIndex(NULL)
 	, m_edisc_focusBox_beatIndex(NULL)
 	, m_editableScreenRedraw(false)
-	
+
 	, m_beatForEdit(NULL)
+	, m_bpmForEdit(NULL)
+	, m_offsetTimeForEdit(m_offsetTimeForEdit.zero())
+
+
+	, m_inMusicTesting(false)
+	, m_music()
+	, m_beatHitSound()
+	, m_musicChannel()
 {
 }
 
@@ -85,6 +93,10 @@ SheetEditor_IO::~SheetEditor_IO()
 #include <string>
 void SheetEditor_IO::Initialize(size_t predictionMaxNode, size_t baseBeatPerBar)
 {
+	m_music = g_soundDevice.CreateSoundSample("../rhy_02/697873717765.mp3");
+	//m_beatHitSound = g_soundDevice.CreateSoundSample("handclap.wav");
+	m_beatHitSound = g_soundDevice.CreateSoundSample("tick.mp3");
+
 	// Alloc Sheet editor
 	m_editor = new SheetEditor();
 	m_editor->Initialize(predictionMaxNode, baseBeatPerBar);
@@ -109,9 +121,14 @@ void SheetEditor_IO::Initialize(size_t predictionMaxNode, size_t baseBeatPerBar)
 	m_editableScreenRedraw = true;
 
 	m_beatForEdit = 16;
+	m_bpmForEdit = 198;
+	m_offsetTimeForEdit = m_offsetTimeForEdit.zero();
+	m_offsetTimeForEdit = std::chrono::milliseconds(730);
 
 
 
+	m_musicChannel = std::move(m_music.play());
+	m_musicChannel.pause();
 
 	// ¿”Ω√∑ŒµÂ
 	std::ifstream file("697873717765.txt");
@@ -126,87 +143,38 @@ void SheetEditor_IO::Initialize(size_t predictionMaxNode, size_t baseBeatPerBar)
 
 void SheetEditor_IO::Update()
 {
-	const POINT mousePos = g_inputDevice.MousePos();
-	const POINT mouseDelta = g_inputDevice.MouseDelta();
-	
-	// Editor Beat
-	if (g_inputDevice.IsKeyDown('1')) m_beatForEdit = 1;
-	if (g_inputDevice.IsKeyDown('2')) m_beatForEdit = 2;
-	if (g_inputDevice.IsKeyDown('3')) m_beatForEdit = 3;
-	if (g_inputDevice.IsKeyDown('4')) m_beatForEdit = 4;
-	if (g_inputDevice.IsKeyDown('5')) m_beatForEdit = 6;
-	if (g_inputDevice.IsKeyDown('6')) m_beatForEdit = 8;
-	if (g_inputDevice.IsKeyDown('7')) m_beatForEdit = 12;
-	if (g_inputDevice.IsKeyDown('8')) m_beatForEdit = 16;
-	if (g_inputDevice.IsKeyDown('9')) m_beatForEdit = 24;
-	if (g_inputDevice.IsKeyDown('0')) m_beatForEdit = 48;
+	if (g_inputDevice.IsKeyDown(VK_OEM_4))	--m_bpmForEdit;
+	if (g_inputDevice.IsKeyDown(VK_OEM_6))	++m_bpmForEdit;
+
+	if (g_inputDevice.IsKeyDown(VK_OEM_COMMA))	m_offsetTimeForEdit -= std::chrono::milliseconds(10);
+	if (g_inputDevice.IsKeyDown(VK_OEM_PERIOD))	m_offsetTimeForEdit += std::chrono::milliseconds(10);
 
 
-	// Preview Screen Update
-	if (0 <= mousePos.x && mousePos.x <= 800 &&
-		0 <= mousePos.y && mousePos.y <= 1000)
+	if (g_inputDevice.IsKeyDown(VK_SPACE))
 	{
-		const POINT uiMousePos = mousePos;
-		if ((mouseDelta.x || mouseDelta.y) && mousePos.x < _grid_screenWidth * 16)
+		m_inMusicTesting = !m_inMusicTesting;
+		if (m_inMusicTesting)
 		{
-			if (g_inputDevice.IsKeyPressed(VK_RBUTTON))
-				if (!g_inputDevice.IsKeyDown(VK_RBUTTON))
-				{
-					m_previewScreenScroll -= mouseDelta.x;
-					m_previewScreenRedraw = true;
-				}
+			using namespace std::chrono_literals;
+			m_musicChannel.set_time(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(240s) / m_bpmForEdit * m_focusBox_barPosition) + m_offsetTimeForEdit);
+			
+			if (m_musicChannel.is_available())
+				m_musicChannel.play();
+			else
+				m_musicChannel = m_music.play();
 
-			if (g_inputDevice.IsKeyPressed(VK_LBUTTON))
-			{
-				int clickedPosX = uiMousePos.x + m_previewScreenScroll;
-				int clickedPosY = _grid_lineHeight - (uiMousePos.y - __grid_lineEdgeHeight);
-
-				float a = clickedPosX / _grid_screenWidth * _grid_barPerLine;
-				m_focusBox_barPosition = std::max<float>(0, (std::max<int>(clickedPosX, 0) / _grid_screenWidth * _grid_barPerLine) + ((float)clickedPosY / __grid_barInterval) - __preview_focusBox_offset);
-				m_previewScreenRedraw = true;
-				m_editableScreenRedraw = true;
-			}
-		}
-	}
-	if (m_previewScreenScroll < -300)
-	{
-		m_previewScreenScroll = -300;
-		m_previewScreenRedraw = true;
-	}
-
-	// Editable Screen Update
-	if (1400 - 1 <= mousePos.x && mousePos.x <= 1600 &&
-				0 <= mousePos.y && mousePos.y <= 1000)
-	{
-		const POINT uiMousePos = { mousePos.x - (1400 - 1), mousePos.y };
-		if (__editableScreen_lineEdgeWidth <= uiMousePos.x && uiMousePos.x < __editableScreen_lineEdgeWidth + __editableScreen_lineWidth)
-		{
-			size_t prevLane = m_edisc_focusBox_laneIndex, prevBeat = m_edisc_focusBox_beatIndex;
-
-			m_edisc_focusBox_laneIndex = std::max<int>(0, ((int)uiMousePos.x - __editableScreen_lineEdgeWidth) / __editableScreen_laneInterval);
-			m_edisc_focusBox_beatIndex = std::max<int>(0, ((float)__editableScreen_lineHeight - ((int)uiMousePos.y - __editableScreen_lineEdgeHeight)) / __editableScreen_beatInterval + (m_focusBox_barPosition * _beatPerBar));
-			m_edisc_focusBox_beatIndex = (m_edisc_focusBox_beatIndex / (_beatPerBar / m_beatForEdit)) * (_beatPerBar / m_beatForEdit);
-
-			if (g_inputDevice.IsKeyDown(VK_LBUTTON))
-			{
-				size_t bar = m_edisc_focusBox_beatIndex / _beatPerBar;
-				size_t beat = m_edisc_focusBox_beatIndex - (bar * _beatPerBar);
-				bool state = m_editor->NoteFlip(m_edisc_focusBox_laneIndex, bar, beat);
-				_draw_note(m_edisc_focusBox_laneIndex, bar, beat, state);
-				m_previewScreenRedraw = true;
-				m_editableScreenRedraw = true;
-			}
-
-			if (m_edisc_focusBox_laneIndex != prevLane ||
-				m_edisc_focusBox_beatIndex != prevBeat)
-				m_editableScreenRedraw = true;
+			m_edisc_focusBox_laneIndex = _laneCount;
 		}
 		else
 		{
-			m_edisc_focusBox_laneIndex = _laneCount;
-			m_editableScreenRedraw = true;
+			m_musicChannel.pause();
 		}
 	}
+		
+	if (m_inMusicTesting)
+		_update_musicTest();
+	else
+		_update_editable();
 }
 
 void SheetEditor_IO::Render()
@@ -264,6 +232,7 @@ void SheetEditor_IO::Render()
 			if (_preview_focusBox_barCount - costEdge < barPos)
 				resultDC.DrawRectBySize(drawPosX + _grid_screenWidth, drawPosY + _grid_lineHeight, drawWidth, drawHeight);
 		}
+		DC_FillRect(resultDC, 801, 0, 1400 - 2, 1000, (HBRUSH)GetStockObject(BLACK_BRUSH)); // πˆ±◊µ§±‚
 		m_previewScreenRedraw = false;
 	}
 
@@ -358,12 +327,24 @@ void SheetEditor_IO::Render()
 	}
 
 	// æ∆ ∏∏µÈ±‚ ±Õ¬˙¥Ÿ
-	RECT rc{ 810, 10, 810, 10 };
 	resultDC.SetPenTransparent(false);
 	resultDC.SetPenColor(127, 127, 127);
-	std::string str = std::to_string(m_beatForEdit) + " beat   ";
-	DrawTextA(resultDC.DeviceContextHandle(), (str).data(), -1, &rc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+	RECT rc;
 
+	rc = { 810, 10, 810, 10 };
+	std::string beatStr = std::to_string(m_beatForEdit) + " beat   ";
+	DrawTextA(resultDC.DeviceContextHandle(), (beatStr).data(), -1, &rc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+
+	rc = { 810, 30, 810, 30 };
+	std::string bpmStr = std::to_string(m_bpmForEdit) + " bpm   ";
+	DrawTextA(resultDC.DeviceContextHandle(), (bpmStr).data(), -1, &rc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+
+	rc = { 810, 50, 810, 50 };
+	std::string offsetStr = std::to_string(m_offsetTimeForEdit.count()) + " offset                      ";
+	DrawTextA(resultDC.DeviceContextHandle(), (offsetStr).data(), -1, &rc, DT_LEFT | DT_TOP | DT_SINGLELINE | DT_NOCLIP);
+
+
+	// :3
 	drawDC.DetachRenderTarget();
 	resultDC.DetachRenderTarget();
 }
@@ -381,6 +362,9 @@ void SheetEditor_IO::Release()
 		delete m_editor;
 		m_editor = nullptr;
 	}
+
+	m_beatHitSound.release();
+	m_music.release();
 }
 
 
@@ -461,5 +445,125 @@ void SheetEditor_IO::_draw_note(size_t laneIndex, size_t barIndex, size_t beatIn
 		dc.SetBrushColor(_chromakeyColor);
 	}
 	dc.DrawRectBySize(x + 1, y - _grid_note_height, __grid_laneInterval - 1, _grid_note_height);
+}
+
+
+
+void SheetEditor_IO::_update_editable()
+{
+	const POINT mousePos = g_inputDevice.MousePos();
+	const POINT mouseDelta = g_inputDevice.MouseDelta();
+	
+	// Editor Beat
+	if (g_inputDevice.IsKeyDown('1')) m_beatForEdit = 1;
+	if (g_inputDevice.IsKeyDown('2')) m_beatForEdit = 2;
+	if (g_inputDevice.IsKeyDown('3')) m_beatForEdit = 3;
+	if (g_inputDevice.IsKeyDown('4')) m_beatForEdit = 4;
+	if (g_inputDevice.IsKeyDown('5')) m_beatForEdit = 6;
+	if (g_inputDevice.IsKeyDown('6')) m_beatForEdit = 8;
+	if (g_inputDevice.IsKeyDown('7')) m_beatForEdit = 12;
+	if (g_inputDevice.IsKeyDown('8')) m_beatForEdit = 16;
+	if (g_inputDevice.IsKeyDown('9')) m_beatForEdit = 24;
+	if (g_inputDevice.IsKeyDown('0')) m_beatForEdit = 48;
+
+
+	// Preview Screen Update
+	if (0 <= mousePos.x && mousePos.x <= 800 &&
+		0 <= mousePos.y && mousePos.y <= 1000)
+	{
+		const POINT uiMousePos = mousePos;
+		if ((mouseDelta.x || mouseDelta.y) && mousePos.x < _grid_screenWidth * 16)
+		{
+			if (g_inputDevice.IsKeyPressed(VK_RBUTTON))
+				if (!g_inputDevice.IsKeyDown(VK_RBUTTON))
+				{
+					m_previewScreenScroll -= mouseDelta.x;
+					m_previewScreenRedraw = true;
+				}
+
+			if (g_inputDevice.IsKeyPressed(VK_LBUTTON))
+			{
+				int clickedPosX = uiMousePos.x + m_previewScreenScroll;
+				int clickedPosY = _grid_lineHeight - (uiMousePos.y - __grid_lineEdgeHeight);
+
+				float a = clickedPosX / _grid_screenWidth * _grid_barPerLine;
+				m_focusBox_barPosition = std::max<float>(0, (std::max<int>(clickedPosX, 0) / _grid_screenWidth * _grid_barPerLine) + ((float)clickedPosY / __grid_barInterval));// -__preview_focusBox_offset);
+				m_previewScreenRedraw = true;
+				m_editableScreenRedraw = true;
+			}
+		}
+	}
+	if (m_previewScreenScroll < -300)
+	{
+		m_previewScreenScroll = -300;
+		m_previewScreenRedraw = true;
+	}
+
+	// Editable Screen Update
+	if (1400 - 1 <= mousePos.x && mousePos.x <= 1600 &&
+				0 <= mousePos.y && mousePos.y <= 1000)
+	{
+		const POINT uiMousePos = { mousePos.x - (1400 - 1), mousePos.y };
+		if (__editableScreen_lineEdgeWidth <= uiMousePos.x && uiMousePos.x < __editableScreen_lineEdgeWidth + __editableScreen_lineWidth)
+		{
+			size_t prevLane = m_edisc_focusBox_laneIndex, prevBeat = m_edisc_focusBox_beatIndex;
+
+			m_edisc_focusBox_laneIndex = std::max<int>(0, ((int)uiMousePos.x - __editableScreen_lineEdgeWidth) / __editableScreen_laneInterval);
+			m_edisc_focusBox_beatIndex = std::max<int>(0, ((float)__editableScreen_lineHeight - ((int)uiMousePos.y - __editableScreen_lineEdgeHeight)) / __editableScreen_beatInterval + (m_focusBox_barPosition * _beatPerBar));
+			m_edisc_focusBox_beatIndex = (m_edisc_focusBox_beatIndex / (_beatPerBar / m_beatForEdit)) * (_beatPerBar / m_beatForEdit);
+
+			if (g_inputDevice.IsKeyDown(VK_LBUTTON))
+			{
+				size_t bar = m_edisc_focusBox_beatIndex / _beatPerBar;
+				size_t beat = m_edisc_focusBox_beatIndex - (bar * _beatPerBar);
+				bool state = m_editor->NoteFlip(m_edisc_focusBox_laneIndex, bar, beat);
+				_draw_note(m_edisc_focusBox_laneIndex, bar, beat, state);
+				m_previewScreenRedraw = true;
+				m_editableScreenRedraw = true;
+			}
+
+			if (m_edisc_focusBox_laneIndex != prevLane ||
+				m_edisc_focusBox_beatIndex != prevBeat)
+				m_editableScreenRedraw = true;
+		}
+		else
+		{
+			m_edisc_focusBox_laneIndex = _laneCount;
+			m_editableScreenRedraw = true;
+		}
+	}
+}
+
+void SheetEditor_IO::_update_musicTest()
+{
+	using namespace std::chrono_literals;
+	using nanoSec_t = std::chrono::nanoseconds;
+	using milliSec_t = std::chrono::milliseconds;
+	milliSec_t time = milliSec_t(m_musicChannel.get_time()) - m_offsetTimeForEdit;
+	if (time < time.zero())
+		return;
+
+	float prevFocusBox_barPosition = m_focusBox_barPosition;
+	m_focusBox_barPosition = (long double)(nanoSec_t(time * m_bpmForEdit).count()) / nanoSec_t(240s).count(); // milliSec_t(time) / (nanoSec_t(240s) / m_bpmForEdit);
+	size_t beginNote = prevFocusBox_barPosition * _beatPerBar;
+	size_t endNote = m_focusBox_barPosition * _beatPerBar;
+
+	const auto& notedata = m_editor->__get_data();
+	for (size_t laneIndex = 0; laneIndex < notedata.size(); ++laneIndex)
+	{
+		size_t drawPositionX = (laneIndex * __editableScreen_laneInterval) + __editableScreen_lineEdgeWidth + 1;
+		const auto& laneNoteData = notedata[laneIndex];
+		for (size_t noteIndex = beginNote; noteIndex < endNote && noteIndex < laneNoteData.size(); ++noteIndex)
+		{
+			const auto& note = laneNoteData[noteIndex];
+			if (!note)
+				continue;
+
+			m_beatHitSound.play().detach();
+		}
+	}
+
+	m_previewScreenRedraw = true;
+	m_editableScreenRedraw = true;
 }
 

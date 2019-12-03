@@ -32,8 +32,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
 
-SoundSample notesound;
-
 MyRenderTarget editScreenDCRenderTarget;
 
 #include "SheetEditor_IO.h"
@@ -43,9 +41,6 @@ void Init()
 {
 	// Sound Device
 	g_soundDevice.Initialize();
-	notesound = g_soundDevice.CreateSoundSample("handclap.wav");
-	notesound.play().detach();
-
 
 	// Main DC
 	constexpr size_t _backgroundWidth = 1600;
@@ -75,6 +70,8 @@ void Init()
 #include <string>
 void Update()
 {
+	g_soundDevice.Update();
+
 	HWND handle = WNDLM.WindowHandle();
 	g_inputDevice.BeginFrame(handle);
 
@@ -145,7 +142,6 @@ void Release()
 	g_dc_backbuffer.Release();
 	g_dc_window.Release();
 
-	notesound.release();
 	g_soundDevice.Release();
 }
 
