@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "SheetEditor_IO.h"
+#include <fstream>
 
 
 // Customizable
@@ -94,7 +95,7 @@ SheetEditor_IO::~SheetEditor_IO()
 void SheetEditor_IO::Initialize(size_t predictionMaxNode, size_t baseBeatPerBar)
 {
 	m_music = g_soundDevice.CreateSoundSample("../rhy_02/697873717765.mp3");
-	//m_beatHitSound = g_soundDevice.CreateSoundSample("handclap.wav");
+	//m_beatHitSound; = g_soundDevice.CreateSoundSample("handclap.wav");
 	m_beatHitSound = g_soundDevice.CreateSoundSample("tick.mp3");
 
 	// Alloc Sheet editor
@@ -254,12 +255,12 @@ void SheetEditor_IO::Render()
 
 		drawDC.SetPenColor(__grayscaleToRGB(_brightnessOf_bar));
 		for (size_t barIndex = 0; barIndex <= __editableScreen_barPerLine + 1; ++barIndex)
-			xAxisDraw(__editableScreen_screenHeight - (((float)barIndex - offset) * __editableScreen_barInterval + __editableScreen_lineEdgeHeight));
+			xAxisDraw((__int64)__editableScreen_screenHeight - (((float)barIndex - offset) * __editableScreen_barInterval + __editableScreen_lineEdgeHeight));
 
 		drawDC.SetPenColor(__grayscaleToRGB(_brightnessOf_subbar));
 		for (size_t barIndex = 0; barIndex <= __editableScreen_barPerLine; ++barIndex)
 			for (size_t subbarIndex = 1; subbarIndex < _subbarPerBar; ++subbarIndex)
-				xAxisDraw(__editableScreen_screenHeight - ((((float)barIndex - offset) * __editableScreen_barInterval) + (subbarIndex * __editableScreen_subbarInterval) + __editableScreen_lineEdgeHeight));
+				xAxisDraw((__int64)__editableScreen_screenHeight - ((((float)barIndex - offset) * __editableScreen_barInterval) + (subbarIndex * __editableScreen_subbarInterval) + __editableScreen_lineEdgeHeight));
 
 		// Draw Y Axis
 		drawDC.SetPenColor(__grayscaleToRGB(_brightnessOf_laneEdge));
@@ -431,7 +432,7 @@ void SheetEditor_IO::_draw_note(size_t laneIndex, size_t barIndex, size_t beatIn
 	size_t y = _grid_screenHeight - ((__grid_lineEdgeHeight)+(barIndex * __grid_barInterval) + (beatIndex * __grid_beatInterval));
 
 	auto& dc = g_dc_rendertarget1;
-	dc.SetRenderTarget(m_noteRt[lineIndex]);
+	dc.SetRenderTarget(m_noteRt[lineIndex]); 
 	dc.SetPenTransparent(false);
 	dc.SetBrushTransparent(false);
 	if (state)
@@ -448,9 +449,25 @@ void SheetEditor_IO::_draw_note(size_t laneIndex, size_t barIndex, size_t beatIn
 }
 
 
-
+#include "fdia.inl"
 void SheetEditor_IO::_update_editable()
 {
+	// load and save
+	bool ret = true;
+	if (false);
+	else if (g_inputDevice.IsKeyDown(VK_F5))	m_music = g_soundDevice.CreateSoundSample(_get_openFileName_toA());
+	else if (g_inputDevice.IsKeyDown(VK_F6))	m_beatHitSound = g_soundDevice.CreateSoundSample(_get_openFileName_toA());
+
+	else if (g_inputDevice.IsKeyDown(VK_F1))	SaveFile(_get_saveFileName_toA());
+	else if (g_inputDevice.IsKeyDown(VK_F2))	LoadFile(_get_openFileName_toA());
+	else if (g_inputDevice.IsKeyDown(VK_F3))	ExtractFile(_get_saveFileName_toA());
+	else if (g_inputDevice.IsKeyDown(VK_F4))	InjectFile(_get_openFileName_toA());
+	else ret = false;
+	if (ret)
+		return;
+
+
+
 	const POINT mousePos = g_inputDevice.MousePos();
 	const POINT mouseDelta = g_inputDevice.MouseDelta();
 	
@@ -545,8 +562,8 @@ void SheetEditor_IO::_update_musicTest()
 
 	float prevFocusBox_barPosition = m_focusBox_barPosition;
 	m_focusBox_barPosition = (long double)(nanoSec_t(time * m_bpmForEdit).count()) / nanoSec_t(240s).count(); // milliSec_t(time) / (nanoSec_t(240s) / m_bpmForEdit);
-	size_t beginNote = prevFocusBox_barPosition * _beatPerBar;
-	size_t endNote = m_focusBox_barPosition * _beatPerBar;
+	size_t beginNote = (__int64)prevFocusBox_barPosition * _beatPerBar;
+	size_t endNote = (__int64)m_focusBox_barPosition * _beatPerBar;
 
 	const auto& notedata = m_editor->__get_data();
 	for (size_t laneIndex = 0; laneIndex < notedata.size(); ++laneIndex)
@@ -567,3 +584,110 @@ void SheetEditor_IO::_update_musicTest()
 	m_editableScreenRedraw = true;
 }
 
+
+
+#define ErrorBreak { error = true; break; }
+#define UpdateToken_ErrorBreak \
+{ if (!UpdateToken())	ErrorBreak }
+
+void SheetEditor_IO::LoadFile(string_view_t filePath)
+{
+	std::fstream file;
+	file.open(filePath.data(), std::fstream::in);
+	if (!file.is_open())
+		return;
+
+	std::string token;
+	auto UpdateToken = [&file, &token]()->bool
+	{
+		token.clear();
+		while (!file.eof())
+		{
+			char ch = file.get();
+			if (ch <= 32)
+			{
+				if (token.empty())	continue;
+				else				break;
+			}
+			token += ch;
+		}
+		return !token.empty();
+	};
+
+	bool error = false;
+	while (UpdateToken())
+	{
+		if (token == "edv")
+		{
+			UpdateToken_ErrorBreak;
+			if (token != "0.0v")
+				ErrorBreak;
+		}
+		else if (token == "bpm")
+		{
+			UpdateToken_ErrorBreak;
+			m_bpmForEdit = std::stoi(token);
+		}
+		else if (token == "beat_unit")
+		{
+			UpdateToken_ErrorBreak;
+		}
+		else if (token == "beat_data")
+		{
+			size_t lane = NULL, beat = NULL;
+			m_editor->Clear();
+			while (true)
+			{
+				if (!UpdateToken())
+					break;
+				lane = std::stoi(token);
+
+				UpdateToken_ErrorBreak;
+				beat = std::stoi(token);
+
+				m_editor->AddNote(lane, beat / _beatPerBar, beat % _beatPerBar);
+			}
+			_resize_note_rt(50);
+			break;
+		}
+		else
+			ErrorBreak;
+	}
+	file.close();
+}
+
+void SheetEditor_IO::InjectFile(string_view_t filePath)
+{
+}
+
+void SheetEditor_IO::SaveFile(string_view_t filePath)
+{
+	std::fstream file;
+	file.open(filePath.data(), std::fstream::out | std::fstream::trunc);
+	if (!file.is_open())
+		return;
+
+	constexpr char __escSeq = '\n';
+	file << "edv " << "0.0v" << __escSeq;
+	file << "bpm " << m_bpmForEdit << __escSeq;
+	file << "beat_unit " << _beatPerBar << __escSeq;
+	//file << "lane_count = " << _laneCount << __escSeq;
+	file << "beat_data" << __escSeq;
+	
+	auto& data = m_editor->__get_data();
+	for (size_t lane = 0; lane < data.size(); ++lane)
+	{
+		auto& laneData = data[lane];
+		for (size_t beat = 0; beat < laneData.size(); ++beat)
+		{
+			if (laneData[beat])
+				file << lane << ' ' << beat << __escSeq;
+		}
+	}
+
+	file.close();
+}
+
+void SheetEditor_IO::ExtractFile(string_view_t filePath)
+{
+}

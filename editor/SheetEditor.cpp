@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "SheetEditor.h"
 
+
+
 SheetEditor::SheetEditor()
 	: m_beatPerBar(NULL)
 	, m_note()
@@ -39,3 +41,5 @@ bool SheetEditor::NoteFlip(size_t lane, size_t bar, size_t beat)
 
 	return noteContainer[notePosition] = !noteContainer[notePosition];
 }
+
+

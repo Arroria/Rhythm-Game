@@ -7,6 +7,8 @@ class SheetEditor_IO
 	using EditorTime_t = std::chrono::milliseconds;
 
 public:
+	using string_view_t = std::string_view;
+	
 	SheetEditor_IO();
 	~SheetEditor_IO();
 
@@ -56,4 +58,12 @@ private:
 
 	void _update_editable();
 	void _update_musicTest();
+
+
+
+
+	void LoadFile(string_view_t filePath);
+	void InjectFile(string_view_t filePath);
+	void SaveFile(string_view_t filePath);
+	void ExtractFile(string_view_t filePath);
 };
