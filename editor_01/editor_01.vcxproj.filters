@@ -3,8 +3,66 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="mywinapi.cpp" />
+    <ClCompile Include="WindowsRenderDevice.cpp">
+      <Filter>mywinapi</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowLoopManager.cpp">
+      <Filter>mywinapi</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsDeviceContext.cpp">
+      <Filter>mywinapi</Filter>
+    </ClCompile>
+    <ClCompile Include="WindowsObject.cpp">
+      <Filter>mywinapi</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="mywinapi.h" />
+    <ClInclude Include="WindowsRenderDevice.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="windefinclude.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowLoopManager.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsDeviceContext.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="WindowsObject.h">
+      <Filter>mywinapi</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>_un</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="mywinapi">
+      <UniqueIdentifier>{d6eb783c-3cf6-4d62-8552-85abb2511fec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_un">
+      <UniqueIdentifier>{9899b616-8391-44bd-ae62-ef894dc14241}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ptrutiliy.hpp">
+      <Filter>mywinapi</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="icon.ico">
+      <Filter>_un</Filter>
+    </Image>
+    <Image Include="icon_small.ico">
+      <Filter>_un</Filter>
+    </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="rc.rc">
+      <Filter>_un</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
