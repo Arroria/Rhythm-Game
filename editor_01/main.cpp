@@ -1,18 +1,5 @@
 #include "pch.h"
 
-#include "WindowLoopManager.h"
-WindowLoopManager g_wndlm;
-#define WNDLM (g_wndlm)
-
-#include "WindowsRenderDevice.h"
-WindowsRenderDevice g_wndRendev;
-#define WNDRD (g_wndRendev)
-
-
-constexpr size_t _window_width = 1600;
-constexpr size_t _window_height = 1000;
-
-
 void Init();
 void Update();
 void Render();
@@ -41,9 +28,19 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 }
 
 
+#include "BeatNoteSheet.h"
+BeatNoteSheet bnsData;
 void Init()
 {
+	Console::Create();
+
 	WNDRD.Initialize(WNDLM.WindowHandle(), _window_width, _window_height);
+
+	if (BNS_Load("./_gamedata/test.txt", bnsData))
+	{
+		if (BNS_Save("./_gamedata/test_out.txt", bnsData))
+			int °³²Ü = 1;
+	}
 }
 void Update()
 {
@@ -56,11 +53,26 @@ void Render()
 	
 	WNDRD.SingleLine(0, 0, _window_width, _window_height);
 
+
+	WNDRD.SetPenColor(0, 0, 0);
+	for (size_t lane = 0; lane < bnsData.m_beatData.size(); ++lane)
+	{
+		auto& noteList = bnsData.m_beatData[lane];
+		for (size_t beat = 0; beat < noteList.size(); ++beat)
+		{
+			if (noteList[beat])
+				WNDRD.SingleLine(beat, lane * 10, beat, (lane + 1) * 10);
+		}
+	}
+
+	
 	WNDRD.Clipping();
 }
 void Release()
 {
 	WNDRD.Release();
+
+	Console::Release();
 }
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)

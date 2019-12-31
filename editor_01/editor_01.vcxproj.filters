@@ -3,7 +3,6 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="mywinapi.cpp" />
     <ClCompile Include="WindowsRenderDevice.cpp">
       <Filter>mywinapi</Filter>
     </ClCompile>
@@ -16,10 +15,15 @@
     <ClCompile Include="WindowsObject.cpp">
       <Filter>mywinapi</Filter>
     </ClCompile>
+    <ClCompile Include="Console.cpp">
+      <Filter>console</Filter>
+    </ClCompile>
+    <ClCompile Include="BeatNoteSheet.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
-    <ClInclude Include="mywinapi.h" />
     <ClInclude Include="WindowsRenderDevice.h">
       <Filter>mywinapi</Filter>
     </ClInclude>
@@ -38,6 +42,12 @@
     <ClInclude Include="Resource.h">
       <Filter>_un</Filter>
     </ClInclude>
+    <ClInclude Include="Console.h">
+      <Filter>console</Filter>
+    </ClInclude>
+    <ClInclude Include="BeatNoteSheet.h">
+      <Filter>editor</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mywinapi">
@@ -45,6 +55,12 @@
     </Filter>
     <Filter Include="_un">
       <UniqueIdentifier>{9899b616-8391-44bd-ae62-ef894dc14241}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="console">
+      <UniqueIdentifier>{180d6b22-1cce-4a97-af3f-e7ba036312a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="editor">
+      <UniqueIdentifier>{dd8c47ee-2fc4-4c52-9423-92c6232e6c7a}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
