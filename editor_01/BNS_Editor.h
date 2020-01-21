@@ -17,6 +17,8 @@ public:
 	void InjectBNS(const BeatNoteSheet& bns);
 
 private:
+	bool ScreenToNote(int& out_lane, int& out_beat, POINT pos);
+
 	bool CreateNoteScreenGrid();
 	bool CreateNoteScreen();
 
@@ -39,7 +41,6 @@ private:
 
 	// Editor Data
 	int m_noteCursor;
-
 
 	std::array<WNDRD_RenderTarget, __max> m_renderTarget;
 
