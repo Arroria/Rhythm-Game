@@ -11,6 +11,14 @@ inline WindowLoopManager g_wndlm;
 inline WindowsRenderDevice g_wndRendev;
 #define WNDRD (g_wndRendev)
 
+#include "InputDevice/InputDevice.h"
+#if _DEBUG
+#pragma comment (lib, "InputDevice/Debug/x64/InputDevice.lib")
+#else
+#pragma comment (lib, "InputDevice/Release/x64/InputDevice.lib")
+#endif
+inline InputDevice g_inputDevice;
+
 #include "Console.h"
 #include <iostream>
 

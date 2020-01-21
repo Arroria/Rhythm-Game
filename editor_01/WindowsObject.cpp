@@ -12,7 +12,7 @@ WindowsBitmap::WindowsBitmap()
 WindowsBitmap::WindowsBitmap(WindowsBitmap&& windowBitmap) noexcept
 	: m_bitmapHandle(windowBitmap.m_bitmapHandle)
 	, m_width(windowBitmap.m_width)
-	, m_height(windowBitmap.m_width)
+	, m_height(windowBitmap.m_height)
 {
 	windowBitmap.m_bitmapHandle = nullptr;
 	windowBitmap.m_width = 0;
@@ -54,7 +54,7 @@ bool WindowsBitmap::Created() const	{ return m_bitmapHandle; }
 bool WindowsBitmap::operator==(const WindowsBitmap& bitmap) const	{ return m_bitmapHandle == bitmap.m_bitmapHandle; }
 bool WindowsBitmap::operator!=(const WindowsBitmap& bitmap) const	{ return m_bitmapHandle != bitmap.m_bitmapHandle; }
 
-size_t WindowsBitmap::Width() const	{ return m_width; }
+size_t WindowsBitmap::Width() const		{ return m_width; }
 size_t WindowsBitmap::Height() const	{ return m_height; }
 
 bool WindowsBitmap::_create(WindowsDeviceContext& wdc, size_t width, size_t height)

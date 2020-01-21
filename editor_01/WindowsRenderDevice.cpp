@@ -19,7 +19,7 @@ WindowsRenderDevice::WindowsRenderDevice()
 	, m_screenDC()
 	, m_memoryDC()
 	, m_copyDC()
-	, m_backbufferBitmap(std::make_shared<WindowsBitmap>())
+	, m_backbufferBitmap()
 {
 }
 
@@ -38,7 +38,7 @@ bool WindowsRenderDevice::Initialize(HWND windowHandle, size_t width, size_t hei
 	fails[0] = !m_screenDC.Initialze(windowHandle);
 	fails[1] = !m_memoryDC.Initialze(m_screenDC);
 	fails[2] = !m_copyDC.Initialze(m_screenDC);
-	fails[3] = !m_backbufferBitmap->Create(m_screenDC, width, height);
+	fails[3] = !CreateRenderTarget(m_backbufferBitmap, width, height);
 
 	if (fails[0] || fails[1] || fails[2] || fails[3])
 	{
@@ -63,7 +63,7 @@ void WindowsRenderDevice::Release()
 	m_screenDC.Release();
 	m_memoryDC.Release();
 	m_copyDC.Release();
-	m_backbufferBitmap->Release();
+	m_backbufferBitmap.Release();
 }
 
 
@@ -80,23 +80,23 @@ void WindowsRenderDevice::DrawOnScreenDirect()
 
 void WindowsRenderDevice::DrawOnMainBuffer()
 {
-	m_memoryDC.RegistBitmap(m_backbufferBitmap);
+	m_memoryDC.RegistBitmap(m_backbufferBitmap._getraw_sptr());
 	m_targetDC = &m_memoryDC;
 }
 
-void WindowsRenderDevice::DrawOnCustomBitmap(std::shared_ptr<WindowsBitmap> bitmap_ptr)
+void WindowsRenderDevice::DrawOnCustomBitmap(WNDRD_RenderTarget& bitmap_ptr)
 {
-	if (bitmap_ptr && bitmap_ptr->Created())
+	if (bitmap_ptr.Created())
 	{
-		m_memoryDC.RegistBitmap(bitmap_ptr);
+		m_memoryDC.RegistBitmap(bitmap_ptr._getraw_sptr());
 		m_targetDC = &m_memoryDC;
 	}
 }
 
-void WindowsRenderDevice::CopyTargetBitmap(std::shared_ptr<WindowsBitmap> bitmap_ptr)
+void WindowsRenderDevice::CopyTargetBitmap(WNDRD_RenderTarget& bitmap_ptr)
 {
-	if (bitmap_ptr && bitmap_ptr->Created())
-		m_copyDC.RegistBitmap(bitmap_ptr);
+	if (bitmap_ptr.Created())
+		m_copyDC.RegistBitmap(bitmap_ptr._getraw_sptr());
 }
 
 void WindowsRenderDevice::UnlinkCustomBitmap()		{ m_memoryDC.UnregistBitmap(); }
@@ -108,8 +108,21 @@ void WindowsRenderDevice::Clipping()
 	if (!m_screenDC.Created() || !m_memoryDC.Created())
 		return;
 
-	m_memoryDC.RegistBitmap(m_backbufferBitmap);
-	_hdc_copy_bitmap(m_screenDC._getraw_hdc(), m_memoryDC._getraw_hdc(), 0, 0, 0, 0, (int)m_backbufferBitmap->Width(), (int)m_backbufferBitmap->Height());
+	m_memoryDC.RegistBitmap(m_backbufferBitmap._getraw_sptr());
+	_hdc_copy_bitmap(m_screenDC._getraw_hdc(), m_memoryDC._getraw_hdc(), 0, 0, 0, 0, (int)m_backbufferBitmap.Width(), (int)m_backbufferBitmap.Height());
+}
+
+bool WindowsRenderDevice::CreateRenderTarget(WNDRD_RenderTarget& out, size_t width, size_t height)
+{
+	if (out.Created())
+		return false;
+
+	WindowsBitmap bitmap;
+	if (!bitmap.Create(m_screenDC, width, height))
+		return false;
+
+	out = WNDRD_RenderTarget(std::move(bitmap));
+	return true;
 }
 
 
@@ -124,7 +137,7 @@ void WindowsRenderDevice::LinePoint(int xPos, int yPos)						{ if (_target_avail
 void WindowsRenderDevice::LineLink(int xPos, int yPos)						{ if (_target_available()) LineTo(_get_raw_targetDC(), xPos, yPos); }
 void WindowsRenderDevice::SingleLine(int xTo, int yTo, int xAt, int yAt)	{ LinePoint(xTo, yTo); LineLink(xAt, yAt); }
 
-void WindowsRenderDevice::DrawBox(int xPos, int yPos, int width, int height)	{ if (_target_available() && width && height) Rectangle(_get_raw_targetDC(), xPos, yPos, xPos + width - 1, yPos + height - 1); }
+void WindowsRenderDevice::DrawBox(int xPos, int yPos, int width, int height)	{ if (_target_available() && width && height) Rectangle(_get_raw_targetDC(), xPos, yPos, xPos + width, yPos + height); }
 void WindowsRenderDevice::Fill(int xPos, int yPos, int width, int height)
 {
 	if (!(_target_available() && width && height))
@@ -133,7 +146,7 @@ void WindowsRenderDevice::Fill(int xPos, int yPos, int width, int height)
 	if (!brush)
 		return;
 	
-	RECT temp{ xPos, yPos, xPos + width - 1, yPos + height - 1 };
+	RECT temp{ xPos, yPos, xPos + width, yPos + height };
 	FillRect(_get_raw_targetDC(), &temp, brush);
 }
 
@@ -148,3 +161,47 @@ void WindowsRenderDevice::CopyTransparent(int xPos_copy, int yPos_copy, int xPos
 	if (_target_available() && width && height)
 		_hdc_copy_bitmap_transparent(_get_raw_targetDC(), m_copyDC._getraw_hdc(), xPos_copy, yPos_copy, xPos_paste, yPos_paste, width, height, transparentColor);
 }
+
+
+
+
+
+WNDRD_RenderTarget::WNDRD_RenderTarget()
+	: m_wndBitmap(nullptr)
+{
+}
+
+WNDRD_RenderTarget::WNDRD_RenderTarget(WindowsBitmap&& _raw_bitmap)
+	: m_wndBitmap(std::make_shared<WindowsBitmap>(std::move(_raw_bitmap)))
+{
+}
+
+WNDRD_RenderTarget::WNDRD_RenderTarget(WNDRD_RenderTarget& wndrd_rt)
+	: m_wndBitmap(wndrd_rt.m_wndBitmap)
+{
+}
+
+WNDRD_RenderTarget::WNDRD_RenderTarget(WNDRD_RenderTarget&& wndrd_rt) noexcept
+	: m_wndBitmap(std::move(wndrd_rt.m_wndBitmap))
+{
+}
+
+WNDRD_RenderTarget::~WNDRD_RenderTarget()
+{
+	_set_null();
+}
+
+
+
+WNDRD_RenderTarget& WNDRD_RenderTarget::operator=(nullptr_t)								{ _set_null();															return *this; }
+WNDRD_RenderTarget& WNDRD_RenderTarget::operator=(WNDRD_RenderTarget& wndrd_rt)				{ m_wndBitmap = wndrd_rt.m_wndBitmap;									return *this; }
+WNDRD_RenderTarget& WNDRD_RenderTarget::operator=(WNDRD_RenderTarget&& wndrd_rt) noexcept	{ m_wndBitmap = std::move(wndrd_rt.m_wndBitmap); wndrd_rt._set_null();	return *this; }
+
+bool WNDRD_RenderTarget::Create(WindowsRenderDevice& wndRenderDevice, size_t width, size_t height)	{ return wndRenderDevice.CreateRenderTarget(*this, width, height); }
+void WNDRD_RenderTarget::Release()	{ _set_null(); }
+
+bool WNDRD_RenderTarget::Created() const	{ return m_wndBitmap && m_wndBitmap->Created(); }
+size_t WNDRD_RenderTarget::Width() const	{ return m_wndBitmap->Width(); }
+size_t WNDRD_RenderTarget::Height() const	{ return m_wndBitmap->Height(); }
+
+void WNDRD_RenderTarget::_set_null() { m_wndBitmap = nullptr; }

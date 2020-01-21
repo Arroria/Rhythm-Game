@@ -167,6 +167,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BeatNoteSheet.cpp" />
+    <ClCompile Include="BNS_Editor.cpp" />
     <ClCompile Include="Console.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="pch.cpp">
@@ -192,6 +193,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BeatNoteSheet.h" />
+    <ClInclude Include="BNS_Editor.h" />
     <ClInclude Include="Console.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />

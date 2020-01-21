@@ -21,6 +21,9 @@
     <ClCompile Include="BeatNoteSheet.cpp">
       <Filter>editor</Filter>
     </ClCompile>
+    <ClCompile Include="BNS_Editor.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -46,6 +49,9 @@
       <Filter>console</Filter>
     </ClInclude>
     <ClInclude Include="BeatNoteSheet.h">
+      <Filter>editor</Filter>
+    </ClInclude>
+    <ClInclude Include="BNS_Editor.h">
       <Filter>editor</Filter>
     </ClInclude>
   </ItemGroup>

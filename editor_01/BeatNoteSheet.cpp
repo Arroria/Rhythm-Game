@@ -1,10 +1,64 @@
 #include "pch.h"
 #include "BeatNoteSheet.h"
 
+BeatNoteSheet::BeatNoteSheet()
+	: m_version(0, 0)
+	, m_bpm(0)
+	, m_beatPerBar(0)
+	, m_beatData()
+{
+}
+
+BeatNoteSheet::BeatNoteSheet(BeatNoteSheet& bns)
+	: m_version(bns.m_version)
+	, m_bpm(bns.m_bpm)
+	, m_beatPerBar(bns.m_beatPerBar)
+	, m_beatData(bns.m_beatData)
+{
+}
+
+#include <array>
+BeatNoteSheet::BeatNoteSheet(BeatNoteSheet&& bns) noexcept
+	: m_version(bns.m_version)
+	, m_bpm(bns.m_bpm)
+	, m_beatPerBar(bns.m_beatPerBar)
+	, m_beatData(std::move(bns.m_beatData))
+{
+	bns.m_version.first = bns.m_version.second = 0;
+	bns.m_bpm = 0;
+	bns.m_beatPerBar = 0;
+}
+
+BeatNoteSheet::~BeatNoteSheet()
+{
+}
+
+BeatNoteSheet& BeatNoteSheet::operator=(BeatNoteSheet& bns)
+{
+	m_version = bns.m_version;
+	m_bpm = bns.m_bpm;
+	m_beatPerBar = bns.m_beatPerBar;
+	m_beatData = bns.m_beatData;
+	return *this;
+}
+
+BeatNoteSheet& BeatNoteSheet::operator=(BeatNoteSheet&& bns) noexcept
+{
+	m_version = bns.m_version;
+	m_bpm = bns.m_bpm;
+	m_beatPerBar = bns.m_beatPerBar;
+	m_beatData = std::move(bns.m_beatData);
+	bns.m_version.first = bns.m_version.second = 0;
+	bns.m_bpm = 0;
+	bns.m_beatPerBar = 0;
+	return *this;
+}
+
+
+
 #include <fstream>
 #include <string>
 #include <string_view>
-#include <array>
 constexpr size_t _token_reserve_size = 20;
 bool BNS_Load(std::string_view path, OUT BeatNoteSheet& out_bns)
 {

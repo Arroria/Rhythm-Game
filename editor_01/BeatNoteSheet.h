@@ -3,6 +3,16 @@
 #include <vector>
 struct BeatNoteSheet
 {
+public:
+	BeatNoteSheet();
+	BeatNoteSheet(BeatNoteSheet& bns);
+	BeatNoteSheet(BeatNoteSheet&& bns) noexcept;
+	~BeatNoteSheet();
+
+	BeatNoteSheet& operator=(BeatNoteSheet& bns);
+	BeatNoteSheet& operator=(BeatNoteSheet&& bns) noexcept;
+
+
 	std::pair<int, int> m_version;
 	int m_bpm;
 	int m_beatPerBar;

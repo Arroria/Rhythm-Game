@@ -71,7 +71,7 @@ void WindowLoopManager::WndMove(const int & xPos, const int & yPos)
 void WindowLoopManager::WndResize(const unsigned int & width, const unsigned int & height)
 {
 	RECT temp;
-	SetRect(&temp, 0, 0, width - 1, height - 1);
+	SetRect(&temp, 0, 0, width, height);
 	AdjustWindowRect(&temp, m_wndStyle, NULL);
 	SetWindowPos(m_hWnd, NULL, 0, 0, temp.right - temp.left, temp.bottom - temp.top, SWP_NOMOVE | SWP_NOZORDER);
 }
