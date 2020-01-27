@@ -16,14 +16,33 @@ public:
 
 	void InjectBNS(const BeatNoteSheet& bns);
 
+
+	int MaxBeatCount() const;
+	int MaxBarCount() const;
+	int PreScnMaxChunkCount() const;
+
+	// Preview Screen
+	void PreScnScrollLeft();
+	void PreScnScrollRight();
+	int PreScnScrollMax() const;
+
 private:
 	bool ScreenToNote(int& out_lane, int& out_beat, POINT pos);
+	bool ScreenToMusicCursor(int& out_musicCursor, POINT pos);
 
-	bool CreateNoteScreenGrid();
-	bool CreateNoteScreen();
+	bool DrawNoteScreenGrid();
+	bool DrawNoteScreen();
+	bool DrawPreviewScreenGreed();
+	bool DrawPreviewScreen();
 
-	void DrawNoteScreenGrid();
-	void DrawNoteScreen();
+	void RenderNoteScreenGrid();
+	void RenderNoteScreen();
+	void RenderNoteScreenCursor();
+	void RenderPreviewScreenGreed();
+	void RenderPreviewScreen();
+	void RenderPreviewScreenCursor();
+
+	float NoteCursorToBar() const;
 
 
 private:
@@ -31,6 +50,8 @@ private:
 	{
 		NoteScreenGrid,
 		NoteScreen,
+		PreviewScreenGrid,
+		PreviewScreen,
 		__max
 	} RTName_t;
 
@@ -41,6 +62,7 @@ private:
 
 	// Editor Data
 	int m_noteCursor;
+	int m_previewScroll;
 
 	std::array<WNDRD_RenderTarget, __max> m_renderTarget;
 

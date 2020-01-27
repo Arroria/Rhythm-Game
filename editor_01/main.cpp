@@ -37,15 +37,17 @@ void Init()
 	Console::Create();
 	WNDRD.Initialize(WNDLM.WindowHandle(), _window_width, _window_height);
 
-	editor.Initialize();
 
 	if (BNS_Load("./_gamedata/test.txt", bnsData))
 	{
 		if (BNS_Save("./_gamedata/test_out.txt", bnsData))
 		{
-			editor.InjectBNS(bnsData);
 		}
+		editor.InjectBNS(bnsData);
+		editor.Initialize();
 	}
+	else
+		std::terminate();
 }
 
 void Update()
