@@ -19,6 +19,9 @@ inline WindowsRenderDevice g_wndRendev;
 #endif
 inline InputDevice g_inputDevice;
 
+#include "SoundDevice.h"
+inline SoundDevice g_soundDevice;
+
 #include "Console.h"
 #include <iostream>
 

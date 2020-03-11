@@ -45,12 +45,14 @@ public:
 	void BackBufferResizing(size_t width, size_t height);
 
 
-	void DrawOnScreenDirect();
-	void DrawOnMainBuffer();
-	void DrawOnCustomBitmap(WNDRD_RenderTarget& bitmap_ptr);
-	void CopyTargetBitmap(WNDRD_RenderTarget& bitmap_ptr);
-	void UnlinkCustomBitmap();
-	void UnlinkCopyTargetBitmap();
+	// Draw Target
+	bool DrawOnScreenDirect();
+	bool DrawOnScreen();
+	bool DrawOnRenderTarget(WNDRD_RenderTarget& renderTarget);
+	void UnlinkRenderTarget();
+
+	bool LinkCopyRenderTarget(WNDRD_RenderTarget& bitmap_ptr);
+	void UnlinkCopyRenderTarget();
 
 	void Clipping();
 
@@ -67,20 +69,50 @@ public:
 
 	constexpr static COLORREF DefaultTransparentColor() { return RGB(255, 0, 255); }
 
+
 	// Draw
-	void LinePoint(int xPos, int yPos);
-	void LineLink(int xPos, int yPos);
-	void SingleLine(int xTo, int yTo, int xAt, int yAt);
+	constexpr static bool _drawOption_negativeSize_allow = false;
 
-	void DrawBox(int xPos, int yPos, int width, int height);
-	void Fill(int xPos, int yPos, int width, int height);
+	bool DrawPixel(int xPos, int yPos, COLORREF color);
+	bool DrawPixelByPen(int xPos, int yPos);
+	bool DrawPixelByBrush(int xPos, int yPos);
 
-	void Copy(int xPos_copy, int yPos_copy, int xPos_paste, int yPos_paste, int width, int height);
-	void CopyTransparent(int xPos_copy, int yPos_copy, int xPos_paste, int yPos_paste, int width, int height, COLORREF transparentColor = DefaultTransparentColor());
+	bool DrawLine(int begin_xPos, int begin_yPos, int end_xPos, int end_yPos);
+	//bool DrawLineList(???); 
+
+	bool DrawBoxSize(int xPos, int yPos, int width, int height);
+	bool DrawBoxCoord(int xPos1, int yPos1, int xPos2, int yPos2);
+
+	bool FillSize(int xPos, int yPos, int width, int height);
+	bool FillCoord(int xPos1, int yPos1, int xPos2, int yPos2);
+	void _FillSize_ExtendExample(int xPos, int yPos, int width, int height, DWORD ropCode);
+
+	bool CopySize(int copy_xPos, int copy_yPos, int copy_width, int copy_height, int paste_xPos, int paste_yPos);
+	bool CopyCoord(int copy_xPos1, int copy_yPos1, int copy_xPos2, int copy_yPos2, int paste_xPos, int paste_yPos);
+	bool CopyTransparentSize(int copy_xPos, int copy_yPos, int copy_width, int copy_height, int paste_xPos, int paste_yPos, COLORREF transparentColor = DefaultTransparentColor());
+	bool CopyTransparentCoord(int copy_xPos1, int copy_yPos1, int copy_xPos2, int copy_yPos2, int paste_xPos, int paste_yPos, COLORREF transparentColor = DefaultTransparentColor());
+
+	// Old draw func
+	//void LinePoint(int xPos, int yPos);
+	//void LineLink(int xPos, int yPos);
+	//void SingleLine(int xTo, int yTo, int xAt, int yAt);
+	//
+	//void DrawBox(int xPos, int yPos, int width, int height);
+	//void Fill(int xPos, int yPos, int width, int height);
+	//
+	//void Copy(int xPos_copy, int yPos_copy, int xPos_paste, int yPos_paste, int width, int height);
+	//void CopyTransparent(int xPos_copy, int yPos_copy, int xPos_paste, int yPos_paste, int width, int height, COLORREF transparentColor = DefaultTransparentColor());
 
 private:
 	bool _target_available() { return m_targetDC && m_targetDC->Created(); }
 	HDC _get_raw_targetDC() { return m_targetDC->_getraw_hdc(); }
+
+	COLORREF _get_pen_color();
+	COLORREF _get_brush_color();
+	bool _draw_pixel(int xPos, int yPos, COLORREF color);
+
+
+
 
 private:
 	WindowsDeviceContext* m_targetDC;

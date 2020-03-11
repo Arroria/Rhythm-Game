@@ -24,6 +24,15 @@
     <ClCompile Include="BNS_Editor.cpp">
       <Filter>editor</Filter>
     </ClCompile>
+    <ClCompile Include="SoundChannel.cpp">
+      <Filter>__sound_device</Filter>
+    </ClCompile>
+    <ClCompile Include="SoundDevice.cpp">
+      <Filter>__sound_device</Filter>
+    </ClCompile>
+    <ClCompile Include="BNS_Editor_SIO.cpp">
+      <Filter>editor</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
@@ -54,6 +63,9 @@
     <ClInclude Include="BNS_Editor.h">
       <Filter>editor</Filter>
     </ClInclude>
+    <ClInclude Include="SoundDevice.h">
+      <Filter>__sound_device</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="mywinapi">
@@ -67,6 +79,9 @@
     </Filter>
     <Filter Include="editor">
       <UniqueIdentifier>{dd8c47ee-2fc4-4c52-9423-92c6232e6c7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="__sound_device">
+      <UniqueIdentifier>{3d94f3aa-d97c-4c50-8724-daa587e0507e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

@@ -37,6 +37,7 @@ void Init()
 	Console::Create();
 	WNDRD.Initialize(WNDLM.WindowHandle(), _window_width, _window_height);
 
+	g_soundDevice.Initialize();
 
 	if (BNS_Load("./_gamedata/test.txt", bnsData))
 	{
@@ -45,6 +46,8 @@ void Init()
 		}
 		editor.InjectBNS(bnsData);
 		editor.Initialize();
+		using namespace std::chrono_literals;
+		//editor.LoadMusic("697873717765.mp3", 600ms);
 	}
 	else
 		std::terminate();
@@ -54,8 +57,37 @@ void Update()
 {
 	HWND windowHandle = WNDLM.WindowHandle();
 	g_inputDevice.BeginFrame(windowHandle);
-	
-	
+	g_soundDevice.Update();
+
+
+
+	// editor
+	const POINT mousePosition = g_inputDevice.MousePos();
+	const int mouseWheelDelta = g_inputDevice.MouseWheel() / 120;
+	if (editor.MouseInNoteScreen(mousePosition))
+	{
+		int laneIndex = NULL, beatIndex = NULL;
+		if (editor.MouseToNoteScreenNotePosition(mousePosition, laneIndex, beatIndex))
+		{
+			if (g_inputDevice.IsKeyDown(VK_LBUTTON))
+				editor.FixNote(laneIndex, beatIndex, !editor.GetNote(laneIndex, beatIndex));
+		}
+	}
+	else if (editor.MouseInPreviewScreen(mousePosition))
+	{
+		editor.PreviewScreenScroll(mouseWheelDelta);
+
+		float barPosition = NULL;
+		if (editor.MouseToPreviewScreenBarPositon(mousePosition, barPosition))
+		{
+			if (g_inputDevice.IsKeyDown(VK_LBUTTON) || g_inputDevice.IsKeyPressed('Q'))
+				editor.SetEditorCursor_ByBar(barPosition);
+		}
+	}
+	if (g_inputDevice.IsKeyDown(VK_SPACE))
+	{
+		editor.SetMusicSyncMode(!editor.IsMusicSyncMode());
+	}
 	editor.Update();
 
 
@@ -64,23 +96,44 @@ void Update()
 
 void Render()
 {
-	//WNDRD.DrawOnMainBuffer();
-	//WNDRD.SetBrushColor(255, 255, 255);
-	//WNDRD.Fill(0, 0, _window_width, _window_height);
-	//
-	//WNDRD.SingleLine(0, 0, _window_width, _window_height);
-	//
-	//
-	//WNDRD.SetPenColor(0, 0, 0);
-	//for (size_t lane = 0; lane < bnsData.m_beatData.size(); ++lane)
-	//{
-	//	auto& noteList = bnsData.m_beatData[lane];
-	//	for (size_t beat = 0; beat < noteList.size(); ++beat)
-	//	{
-	//		if (noteList[beat])
-	//			WNDRD.SingleLine(beat, lane * 10, beat, (lane + 1) * 10);
-	//	}
-	//}
+	// grid
+	static WNDRD_RenderTarget window_grid_rt;
+	if (!window_grid_rt.Created())
+	{
+		if (!window_grid_rt.Create(WNDRD, 1600, 1000))
+			std::terminate();
+		WNDRD.DrawOnRenderTarget(window_grid_rt);
+		WNDRD.SetBrushColor(WNDRD.DefaultTransparentColor());
+		WNDRD.FillSize(0, 0, 1600, 1000);
+		for (int x = 0; x < 1600; x++)
+		{
+			for (int y = 0; y < 1000; y++)
+			{
+				int xData = x % 100;
+				int yData = y % 100;
+
+				if (xData == 99 || yData == 99)
+				{
+					int colorPower = (std::min(xData, yData) + 1) * (255. / 100);
+					WNDRD.DrawPixel(x, y, RGB(0, 0, colorPower));
+					continue;
+				}
+
+				if (!xData || !yData)
+				{
+					int colorPower = (100 - std::max(xData, yData)) * (255. / 100);
+					WNDRD.DrawPixel(x, y, RGB(0, colorPower, 0));
+					continue;
+				}
+			}
+		}
+	}
+	WNDRD.DrawOnScreen();
+	WNDRD.SetBrushColor(RGB(0, 0, 0));
+	WNDRD.FillSize(0, 0, 1600, 1000);
+	WNDRD.LinkCopyRenderTarget(window_grid_rt);
+	WNDRD.CopyTransparentSize(0, 0, 1600, 1000, 0, 0);
+	WNDRD.UnlinkCopyRenderTarget();
 
 	editor.Render();
 
@@ -92,6 +145,7 @@ void Release()
 	editor.Release();
 	WNDRD.Release();
 
+	g_soundDevice.Release();
 	Console::Release();
 }
 
